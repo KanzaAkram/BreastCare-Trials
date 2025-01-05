@@ -1,6 +1,7 @@
 import streamlit as st # Import python packages
-# from snowflake.core import Root
-from snowflake.snowpark import Session  # Instead of Root
+from snowflake.core import Root
+import snowflake.connector
+# from snowflake.snowpark import Session  # Instead of Root
 
 
 MODELS = [
