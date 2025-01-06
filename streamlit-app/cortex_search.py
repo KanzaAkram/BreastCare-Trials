@@ -35,33 +35,34 @@ def init_layout():
     st.title("Breast Cancer Trial Chatbot")
     st.markdown("""
         <style>
-            .main {
-                background: #f4f8fa;
-                border-radius: 15px;
-                padding: 20px;
-            }
-            h1 {
-                font-family: "Arial", sans-serif;
-                color: #005b7f;
-            }
-            .sidebar .sidebar-content {
-                background-color: #005b7f;
-                color: white;
-            }
-            .stTextInput input {
-                background-color: #ffffff;
-                border-radius: 8px;
-                padding: 10px;
-                font-size: 16px;
-            }
-            .stButton button {
-                background-color: #0071a1;
-                color: white;
-                font-size: 16px;
-                border-radius: 8px;
-                padding: 12px;
-            }
-        </style>
+    .main {
+        background: #f4f8fa; /* Light background color */
+        border-radius: 15px;
+        padding: 20px;
+    }
+    h1 {
+        font-family: "Arial", sans-serif;
+        color: #d5006d; /* Pink color for the heading */
+    }
+    .sidebar .sidebar-content {
+        background-color: #000000; /* Black background for sidebar */
+        color: #ffffff; /* White text in the sidebar */
+    }
+    .stTextInput input {
+        background-color: #ffffff; /* White background for input fields */
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 16px;
+    }
+    .stButton button {
+        background-color: #d5006d; /* Pink button background */
+        color: white;
+        font-size: 16px;
+        border-radius: 8px;
+        padding: 12px;
+    }
+</style>
+
     """, unsafe_allow_html=True)
     st.sidebar.markdown(f"Current database and schema: `{db}.{schema}`".replace('"', ''))
 
