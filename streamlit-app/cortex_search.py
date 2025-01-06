@@ -1,8 +1,6 @@
-import streamlit as st # Import python packages
+import streamlit as st
 from snowflake.core import Root
 import snowflake.connector
-# from snowflake.snowpark import Session  # Instead of Root
-
 
 MODELS = [
     "mistral-large",
@@ -21,11 +19,11 @@ def make_session():
 
 def get_available_search_services():
     """
-    Returns list of cortex search services available in the current schema 
+    Returns list of cortex search services available in the current schema
     """
     search_service_results = session.sql(f"SHOW CORTEX SEARCH SERVICES IN SCHEMA {db}.{schema}").collect()
     return [svc.name for svc in search_service_results]
-    
+
 def get_search_column(svc):
     """
     Returns the name of the search column for the provided cortex search service
@@ -34,18 +32,48 @@ def get_search_column(svc):
     return search_service_result.search_column
 
 def init_layout():
-    st.title("Cortex AI Search and Summary")
+    st.title("Breast Cancer Trial Chatbot")
+    st.markdown("""
+        <style>
+            .main {
+                background: #f4f8fa;
+                border-radius: 15px;
+                padding: 20px;
+            }
+            h1 {
+                font-family: "Arial", sans-serif;
+                color: #005b7f;
+            }
+            .sidebar .sidebar-content {
+                background-color: #005b7f;
+                color: white;
+            }
+            .stTextInput input {
+                background-color: #ffffff;
+                border-radius: 8px;
+                padding: 10px;
+                font-size: 16px;
+            }
+            .stButton button {
+                background-color: #0071a1;
+                color: white;
+                font-size: 16px;
+                border-radius: 8px;
+                padding: 12px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
     st.sidebar.markdown(f"Current database and schema: `{db}.{schema}`".replace('"', ''))
 
 def init_config_options():
     """
     Initialize sidebar configuration options
     """
-    st.text_area("Search:", value="", key="query", height=100)
+    st.text_area("Enter your query:", value="", key="query", height=100, label_visibility="collapsed")
     st.sidebar.selectbox("Cortex Search Service", get_available_search_services(), key="cortex_search_service")
-    st.sidebar.number_input("Results", value=5, key="limit", min_value=3, max_value=10)
-    st.sidebar.selectbox("Summarization model", MODELS, key="model")
-    st.sidebar.toggle("Summarize", key="summarize", value = False)
+    st.sidebar.number_input("Number of Results", value=5, key="limit", min_value=3, max_value=10)
+    st.sidebar.selectbox("Select Summarization Model", MODELS, key="model")
+    st.sidebar.checkbox("Summarize Results", key="summarize")
 
 def query_cortex_search_service(query):
     """
@@ -81,25 +109,13 @@ def summarize_search_results(results, query, search_col):
     prompt = f"""
         [INST]
         You are a helpful AI Assistant embedded in a search application. You will be provided a user's search query and a set of search result documents.
-        Your task is to provide a concise, summarized answer to the user's query with the help of the provided the search results.
-
-        The user's query will be included in the <user_query> tag.
-        The search results will be provided in JSON format in the <search_results> tag.
-        
-        Here are the critical rules that you MUST abide by:
-        - You must only use the provided search result documents to generate your summary. Do not fabricate any answers or use your prior knowledge.
-        - You must only summarize the search result documents that are relevant to the user's query. Do not reference any search results that aren't related to the user's query. If none of the provided search results are relevant to the user's query, reply with  "My apologies, I am unable to answer that question with the provided search results".
-        - You must keep your summary to less than 10 sentences. You are encouraged to use bulleted lists, where stylistically appropriate.
-        - Only respond with the summary without any extra explantion. Do not include any sentences like 'Sure, here is an explanation...'.
-
+        Your task is to provide a detailed answer with all relevant details about clinical trial to the user's query with the help of the provided the search results.
         <user_query>
         {query}
         </user_query>
-
         <search_results>
         {search_result_str}
         </search_results>
-
         [/INST]
     """
     
@@ -110,15 +126,14 @@ def display_summary(summary):
     """
     Display the AI summary in the UI
     """
-    st.subheader("AI summary")
-    container = st.container(border=True)
-    container.markdown(summary)
+    st.subheader("AI Summary")
+    st.markdown(f"<div class='main'>{summary}</div>", unsafe_allow_html=True)
 
 def display_search_results(results, search_col):
     """
     Display the search results in the UI
     """
-    st.subheader("Search results")
+    st.subheader("Search Results")
     for i, result in enumerate(results):
         container = st.expander(f"Result {i+1}", expanded=True)
         container.markdown(result[search_col])
@@ -126,8 +141,7 @@ def display_search_results(results, search_col):
 def main():
     init_layout()
     init_config_options()
-    
-    # run chat engine
+
     if not st.session_state.query:
         return
     results = query_cortex_search_service(st.session_state.query)
@@ -140,7 +154,7 @@ def main():
 
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="Cortex AI Search and Summary", layout="wide")
+    st.set_page_config(page_title="Breast Cancer Trial Chatbot", layout="wide")
     
     session = make_session()
     root = Root(session)
