@@ -33,7 +33,7 @@ def init_layout():
     st.markdown("""
         <style>
         .main {
-            background: #d5006d; /* Light background color */
+            background: #fff4f2; /* Light background color */
             border-radius: 15px;
             padding: 20px;
         }
@@ -56,22 +56,26 @@ def init_layout():
             margin-left:20px;
         }
         .sidebar .sidebar-content {
-            background-color: #000000; /* Black background for sidebar */
-            color: #ffffff; /* White text in the sidebar */
+            background-color: #000000; 
+            color: #ffffff; 
         }
         .stTextInput input {
-            background-color: #d5006d; /* White background for input fields */
+            background-color: #fff4f2; 
             border-radius: 8px;
             padding: 10px;
             font-size: 16px;
         }
         .stButton button {
-            background-color: #d5006d; /* Pink button background */
-            color: white;
-            font-size: 16px;
-            border-radius: 8px;
-            padding: 12px;
-        }
+        background: linear-gradient(90deg, #d5006d, #9c27b0); /* Pink to purple gradient background */
+        color: white;
+        font-size: 16px;
+        border-radius: 8px;
+        padding: 12px;
+        border: none; /* Remove border */
+        transition: background-color 0.3s, color 0.3s; 
+        cursor: pointer;
+}
+
     </style>
     """, unsafe_allow_html=True)
 
@@ -86,18 +90,14 @@ def init_layout():
 
     with st.sidebar:
         st.markdown("""
-            <h2 style="color: #d5006d; text-align: center; font-family: 'Arial', sans-serif;">
-                Clinical Trials On-the-Go
+            <h1 style="color: #d5006d; text-align: center; font-family: 'Arial', sans-serif;">
+                Breast Cancer Clinical Trials
             </h2>
-            <p style="text-align: center; color: #333; font-size: 14px; font-weight: bold; font-family: 'Arial', sans-serif;">
+            <p style="text-align: center; color: purple; font-size: 14px; font-weight: bold; margin-bottom:50px; font-family: 'Arial', sans-serif;">
                 Discover and explore breast cancer clinical trials easily and quickly.
             </p>
         """, unsafe_allow_html=True)
 
-    
-    # Adding ribbon after the main heading
-    
-    # st.sidebar.markdown(f"Current database and schema: {db}.{schema}".replace('"', ''))
 
 def init_config_options():
     """
@@ -112,26 +112,53 @@ def init_config_options():
             font-size: 16px;
         }
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-    st.text_area("Enter your query:", value="", key="query", height=100, label_visibility="collapsed", 
-                placeholder="What do you want to know about breast cancer clinical trials?")
+    # Sidebar options for other configurations
+    st.sidebar.selectbox(
+    "Cortex Search Service",
+    get_available_search_services(),
+    key="cortex_search_service",
+    help="Select the search service you want to use. Each service provides different capabilities for clinical trials."
+)
 
-    st.markdown('<div class="ribbon">Search for Clinical Trials</div>', unsafe_allow_html=True)
-    st.sidebar.selectbox("Cortex Search Service", get_available_search_services(), key="cortex_search_service")
-    st.sidebar.number_input("Number of Results", value=5, key="limit", min_value=3, max_value=10)
-    st.sidebar.selectbox("Select Summarization Model", MODELS, key="model")
-    st.sidebar.checkbox("Summarize Results", key="summarize")
+    st.sidebar.selectbox(
+    "Select Summarization Model",
+    MODELS,
+    key="model",
+    help="Choose a summarization model. Each model has different capabilities for generating summaries."
+)
+
+    st.sidebar.checkbox("Summarize Results", key="summarize",help=" If you want a summary with the answer, check this and search the question.")
+
+    # Sidebar - Frequently Asked Questions
     st.sidebar.header("Frequently Asked Questions")
+    question = st.sidebar.radio(
+        "Click a question to search:",
+        options=[
+            "What is the purpose of breast cancer clinical trials?",
+            "What are the phases of a breast cancer clinical trial?",
+            "How do I determine if I am eligible for a breast cancer clinical trial?",
+            "What are the risks and benefits of participating in a clinical trial?",
+            "Are there clinical trials for breast cancer prevention?"
+        ],
+        key="selected_question",
+        index=0  # Default selection
+    )
 
-    # Adding questions as clickable links
-    st.sidebar.markdown("""
-    - [What is the purpose of breast cancer clinical trials?](#)
-    - [What are the phases of a breast cancer clinical trial?](#)
-    - [How do I determine if I am eligible for a breast cancer clinical trial?](#)
-    - [What are the risks and benefits of participating in a clinical trial?](#)
-    - [Are there clinical trials for breast cancer prevention?](#)
-    """)
+    # Set the text area value dynamically based on sidebar question selection
+    if question:
+        st.session_state.query = question
+
+    # Main Text Area
+    st.text_area(
+        "Enter your query:",
+        value=st.session_state.query if "query" in st.session_state else "",
+        key="query",
+        height=100,
+        label_visibility="collapsed",
+        placeholder="What do you want to know about breast cancer clinical trials?"
+    )
 
 
 def query_cortex_search_service(query):
@@ -157,7 +184,7 @@ def complete(model, prompt):
         resp = f"COMPLETE error: {e}"
     return resp
 
-def summarize_search_results(results, query, search_col):
+def summarize_search_results(results, query,search_col):
     """
     Returns a detailed answer of the search results based on the user's query of breast cancer clinical trial
     """
@@ -173,7 +200,7 @@ def summarize_search_results(results, query, search_col):
         {query}
         </user_query>
         <search_results>
-        {search_result_str}
+        # {search_result_str}
         </search_results>
         [/INST]
     """
@@ -181,59 +208,95 @@ def summarize_search_results(results, query, search_col):
     resp = complete(st.session_state.model, prompt)
     return resp
 
+
+def summarize_search_results_short(results, query,search_col):
+    """
+    Returns a concise answer of the search results based on the user's query of breast cancer clinical trial
+    """
+    search_result_str = ""
+    for i, r in enumerate(results):
+        search_result_str += f"Result {i+1}: {r[search_col]} \n"
+
+    prompt = f"""
+        [INST]
+        You are a helpful AI Assistant embedded in a search application. You will be provided a user's search query and a set of search result documents.
+        Your task is to provide a very concise answer with all relevant details about clinical trial to the user's query with the help of the provided the search results nd if user query is irrelevant return sorry no results.
+        <user_query>
+        {query}
+        </user_query>
+        <search_results>
+        # {search_result_str}
+        </search_results>
+        [/INST]
+    """
+    
+    resp = complete(st.session_state.model, prompt)
+    return resp
+
+
+
 def display_summary(summary):
     """
     Display a very concise AI summary in the UI
     """
-    st.subheader("AI Summary")
+    # st.subheader("AI Summary")
     st.markdown(f"<div class='main'>{summary}</div>", unsafe_allow_html=True)
 
-def display_search_results(results, search_col):
+
+def apply_sidebar_styles():
+    sidebar_styles = """
+    <style>
+    [data-testid="stSidebar"] {
+        background: linear-gradient(90deg, #f8bbd0, #e1bee7); /* Light pink to light purple gradient */
+        padding: 20px;
+        color: #333333; /* Text color */
+    }
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3 {
+        color: #4a148c; /* Dark purple for headings */
+    }
+    </style>
     """
-    Display the search results in the UI with sources displayed up to 25 characters
-    """
-    st.subheader("Search Results")
-    for i, result in enumerate(results):
-        container = st.expander(f"Result {i+1}", expanded=True)
-        # Assuming 'search_col' is a key in the result, adjust as necessary based on your data structure
-        container.markdown(result[search_col][:100])  # Limit the output to the first 100 characters/words
+    st.markdown(sidebar_styles, unsafe_allow_html=True)
+
 
 def main():
+    apply_sidebar_styles()  # Apply sidebar styling
     init_layout()
     init_config_options()
 
-    if not st.session_state.query:
+    # Ensure `query` exists in session state to avoid unnecessary processing
+    if "query" not in st.session_state or not st.session_state.query:
+        st.warning("Please enter or select a query to start the search.")
         return
 
     # Trigger search on pressing the Search button
-    if st.session_state.query and st.button("Search"):
-        results = query_cortex_search_service(st.session_state.query)
-        search_col = get_search_column(st.session_state.cortex_search_service)
+    if st.button("Search Clinical Trials"):
+            results = query_cortex_search_service(st.session_state.query)
+            search_col = get_search_column(st.session_state.cortex_search_service)
 
-        # Option to toggle summary visibility
-        if st.session_state.summarize:
-            with st.spinner("Summarizing results..."):
-                summary = summarize_search_results(results, st.session_state.query, search_col)
-                display_summary(summary)
+            # Display detailed results
+            if results:
+                # Fetch and display detailed answer
+                with st.spinner("Fetching answer..."):
+                    detailed_answer = summarize_search_results(results, st.session_state.query,search_col)
+                    st.markdown(detailed_answer)
 
-        display_search_results(results, search_col)
-        
-        # Display detailed answer first
-        with st.spinner("Fetching detailed results..."):
-            search_answer = summarize_search_results(results, st.session_state.query, search_col)
-            st.markdown(search_answer)
-        
-        # Display concise summary below detailed answer without reload
-        if st.session_state.summarize:
-            with st.spinner("Generating concise summary..."):
-                concise_summary = summarize_search_results(results, st.session_state.query, search_col)
-                display_summary(concise_summary)
+                # Display concise summary if summarization is enabled
+                if st.session_state.summarize:
+                    with st.spinner("Generating concise summary..."):
+                        concise_summary = summarize_search_results_short(results, st.session_state.query,search_col)
+                        st.subheader("Summary:")
+                        display_summary(concise_summary)
+            else:
+                st.error("No results found. Please refine your query or try another.")
 
 if __name__ == "__main__":
-    # st.set_page_config(page_title="BreastCare Trial Chatbot", layout="wide")
-    
+    # Set up the session and database connection (if required)
     session = make_session()
     root = Root(session)
     db, schema = session.get_current_database(), session.get_current_schema()
     
+    # Call the main function
     main()
