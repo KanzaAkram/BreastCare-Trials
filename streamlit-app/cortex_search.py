@@ -129,6 +129,9 @@ def init_config_options():
     help="Choose a summarization model. Each model has different capabilities for generating summaries."
 )
 
+    st.sidebar.number_input("Number of Results", value=5, key="limit", min_value=3, max_value=10, help="Select the number of search results you want to display. This will control how many results are shown from your search query.The minimum number of results is 3, and the maximum is 10. Choose any value within this range.")
+    
+
     st.sidebar.checkbox("Summarize Results", key="summarize",help=" If you want a summary with the answer, check this and search the question.")
 
     # Sidebar - Frequently Asked Questions
