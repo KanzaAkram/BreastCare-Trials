@@ -146,7 +146,7 @@ def init_config_options():
             "Are there clinical trials for breast cancer prevention?"
         ],
         key="selected_question",
-        index=0  # Default selection
+        index=1  # Default selection
     )
 
     # Set the text area value dynamically based on sidebar question selection
@@ -196,18 +196,39 @@ def summarize_search_results(results, query,search_col):
         search_result_str += f"Result {i+1}: {r[search_col]} \n"
 
     prompt = f"""
-        [INST]
-        You are a helpful AI Assistant embedded in a search application. You will be provided a user's search query and a set of search result documents.
-        Your task is to provide a detailed answer with all relevant details about clinical trial to the user's query with the help of the provided the search results nd if user query is irrelevant return sorry no results.
-        <user_query>
-        {query}
-        </user_query>
-        <search_results>
-        # {search_result_str}
-        </search_results>
-        [/INST]
-    """
+    [INST]
+    You are an intelligent and empathetic assistant specialized in breast cancer clinical trials. Your purpose is to provide accurate, comprehensive, and detailed information about clinical trials based on documents and user queries.
+
+    Your responses should focus on:
+    - **Trial Information**: Provide details like trial name, phase, purpose, and eligibility criteria.
+    - **Eligibility Requirements**: Clarify inclusion and exclusion criteria in an easy-to-understand way.
+    - **Locations and Contacts**: Share trial locations and contact details where applicable.
+    - **Procedures and Risks**: Explain the trial procedures, risks, and potential benefits.
+    - **Next Steps**: Offer advice on how users can proceed, such as contacting trial coordinators or consulting their doctor.
+
+    Use the following structure to craft responses. Ensure headings are bold and remove unnecessary symbols like hashes or slashes:
     
+    - **Trial Name and Overview**
+    - **Phase and Objective**
+    - **Eligibility Criteria** (with subheadings for Inclusion and Exclusion Criteria)
+    - **Trial Locations and Contact Information**
+    - **Suggested Next Steps**
+    
+    When writing a detailed response, use simple language to ensure clarity for users who may not have a medical background. Be supportive and address concerns empathetically.
+
+    If the document contains incomplete or unclear information, advise the user to visit trusted resources such as [ClinicalTrials.gov](https://clinicaltrials.gov) or consult their healthcare provider for more details. Always prioritize user understanding and support.
+
+    <user_query>
+    {query}
+    </user_query>
+    
+    <search_results>
+    {search_result_str}
+    </search_results>
+    
+    [/INST]
+"""
+
     resp = complete(st.session_state.model, prompt)
     return resp
 
@@ -222,8 +243,12 @@ def summarize_search_results_short(results, query,search_col):
 
     prompt = f"""
         [INST]
-        You are a helpful AI Assistant embedded in a search application. You will be provided a user's search query and a set of search result documents.
-        Your task is to provide a very concise answer with all relevant details about clinical trial to the user's query with the help of the provided the search results nd if user query is irrelevant return sorry no results.
+        You are a highly intelligent assistant specialized in breast cancer clinical trials. Based on the user’s query and the provided clinical trial document, generate a concise and accurate summary that directly answers the user’s question. Your summary should:
+        Address the key aspects of the user’s query without including unnecessary details.
+        Highlight only the most relevant information, such as trial purpose, phase, eligibility criteria, and location, when applicable.
+        Use simple, user-friendly language that is easy to understand, avoiding technical jargon unless the user explicitly asks for it.
+        Be empathetic and supportive in tone, keeping the summary clear and engaging.
+        If the document lacks sufficient information, politely inform the user and suggest they consult ClinicalTrials.gov or their healthcare provider for more details.
         <user_query>
         {query}
         </user_query>
