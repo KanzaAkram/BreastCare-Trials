@@ -36,7 +36,7 @@ These barriers hinder innovation and limit the impact of clinical trial data, ma
 - **NCI Clinical Trial Data**: Powers the platform with clinical trial documents for breast cancer.
 
 ### Development Process:
-1. **Model Integration**: Seamlessly combined Snowflake Cortex Search with Mistral-large-v2 for robust RAG capabilities.
+1. **Model Integration**: Seamlessly combined Snowflake Cortex Search with Mistral-large2 for robust RAG capabilities.
 2. **User-Centric Design**: Focused on building an intuitive interface that caters to both medical professionals and patients.
 
 ---
