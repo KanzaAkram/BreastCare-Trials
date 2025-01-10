@@ -29,7 +29,7 @@ def get_search_column(svc):
     return search_service_result.search_column
 
 def init_layout():
-    # st.title("BreastCare Trial Chatbot")
+    # Add layout styles and title
     st.markdown("""
         <style>
         .main {
@@ -74,8 +74,7 @@ def init_layout():
         border: none; /* Remove border */
         transition: background-color 0.3s, color 0.3s; 
         cursor: pointer;
-}
-
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -84,20 +83,17 @@ def init_layout():
         <h1 style="margin-right: 10px;color:#d5006d; ">BreastCare Trial Chatbot</h1>
         <img src="https://static.cdnlogo.com/logos/p/45/pink-ribbon.svg" alt="Pink Ribbon Logo" style="max-height: 80px; max-width: 100%;">
     </div>
-""", unsafe_allow_html=True)
-
-
+    """, unsafe_allow_html=True)
 
     with st.sidebar:
         st.markdown("""
             <h1 style="color: #d5006d; text-align: center; font-family: 'Arial', sans-serif;">
                 Breast Cancer Clinical Trials
-            </h2>
+            </h1>
             <p style="text-align: center; color: purple; font-size: 14px; font-weight: bold; margin-bottom:50px; font-family: 'Arial', sans-serif;">
                 Discover and explore breast cancer clinical trials easily and quickly.
             </p>
         """, unsafe_allow_html=True)
-
 
 def init_config_options():
     """
@@ -129,41 +125,52 @@ def init_config_options():
     help="Choose a summarization model. Each model has different capabilities for generating summaries."
 )
 
-    st.sidebar.number_input("Number of Results", value=5, key="limit", min_value=3, max_value=10, help="Select the number of search results you want to display. This will control how many results are shown from your search query.The minimum number of results is 3, and the maximum is 10. Choose any value within this range.")
+    st.sidebar.number_input("Number of Results", value=5, key="limit", min_value=3, max_value=10, help="Select the number of search results you want to display. This will control how many results are shown from your search query. The minimum number of results is 3, and the maximum is 10. Choose any value within this range.")
     
 
     st.sidebar.checkbox("Summarize Results", key="summarize",help=" If you want a summary with the answer, check this and search the question.")
 
     # Sidebar - Frequently Asked Questions
+
     st.sidebar.header("Frequently Asked Questions")
-    question = st.sidebar.radio(
+
+# Sidebar Radio Buttons for FAQs
+    faq_options = [
+        "What is the purpose of breast cancer clinical trials?",
+        "What are the phases of a breast cancer clinical trial?",
+        "How do I determine if I am eligible for a breast cancer clinical trial?",
+        "What are the risks and benefits of participating in a clinical trial?",
+        "Are there clinical trials for breast cancer prevention?"
+    ]
+
+    # Sidebar FAQ selection
+    selected_faq = st.sidebar.radio(
         "Click a question to search:",
-        options=[
-            "What is the purpose of breast cancer clinical trials?",
-            "What are the phases of a breast cancer clinical trial?",
-            "How do I determine if I am eligible for a breast cancer clinical trial?",
-            "What are the risks and benefits of participating in a clinical trial?",
-            "Are there clinical trials for breast cancer prevention?"
-        ],
-        key="selected_question",
-        index=1  # Default selection
+        options=faq_options,
+        key="selected_question"
     )
 
-    # Set the text area value dynamically based on sidebar question selection
-    if question:
-        st.session_state.query = question
+    # Initialize session state for query before using it in the text_area
+    if "query" not in st.session_state:
+        st.session_state.query = ""  # Default value is empty, no pre-population
 
-    # Main Text Area
-    st.text_area(
+    # Update session state only if the user selects a FAQ and hasn't modified the text manually
+    if selected_faq and not st.session_state.query:
+        st.session_state.query = selected_faq  # Set query if it's empty
+
+    # Main Text Area for User Input
+    query = st.text_area(
         "Enter your query:",
-        value=st.session_state.query if "query" in st.session_state else "",
+        value=st.session_state.query,  # Populate from session state
         key="query",
         height=100,
         label_visibility="collapsed",
         placeholder="What do you want to know about breast cancer clinical trials?"
     )
 
-
+    # If the user has typed in the query, ensure it updates session state
+    if query != st.session_state.query:
+        st.session_state.query = query  # Update session state with typed query
 def query_cortex_search_service(query):
     """
     Queries the cortex search service in the session state and returns a list of results
@@ -294,32 +301,35 @@ def main():
     init_layout()
     init_config_options()
 
-    # Ensure `query` exists in session state to avoid unnecessary processing
-    if "query" not in st.session_state or not st.session_state.query:
-        st.warning("Please enter or select a query to start the search.")
-        return
+    # Ensure query exists in session state to avoid unnecessary processing
+    if "query" not in st.session_state:
+        st.session_state.query = ""  # Initialize the query if it's not already in session state
 
-    # Trigger search on pressing the Search button
+    # Search Button Logic
     if st.button("Search Clinical Trials"):
+        if not st.session_state.query.strip():  # If query is empty
+            st.warning("Please enter a query or select a question from the FAQ sidebar.")
+        else:
+            # Perform the search
             results = query_cortex_search_service(st.session_state.query)
             search_col = get_search_column(st.session_state.cortex_search_service)
 
             # Display detailed results
             if results:
-                # Fetch and display detailed answer
                 with st.spinner("Fetching answer..."):
-                    detailed_answer = summarize_search_results(results, st.session_state.query,search_col)
+                    detailed_answer = summarize_search_results(results, st.session_state.query, search_col)
                     st.markdown(detailed_answer)
 
-                # Display concise summary if summarization is enabled
+                # Display concise summary if enabled
                 if st.session_state.summarize:
                     with st.spinner("Generating concise summary..."):
-                        concise_summary = summarize_search_results_short(results, st.session_state.query,search_col)
+                        concise_summary = summarize_search_results_short(results, st.session_state.query, search_col)
                         st.subheader("Summary:")
                         display_summary(concise_summary)
             else:
                 st.error("No results found. Please refine your query or try another.")
 
+                
 if __name__ == "__main__":
     # Set up the session and database connection (if required)
     session = make_session()
