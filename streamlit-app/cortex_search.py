@@ -210,7 +210,7 @@ def summarize_search_results_short(results, query, search_col):
 
     prompt = f"""
         [INST]
-        You are an assistant specialized in breast cancer clinical trials. Based on the query and search results, generate a very short and concise summary highlighting only essential details.
+        You are an assistant specialized in breast cancer clinical trials. Based on the query and search results, generate a very short and concise summary highlighting only essential details and give a quick recap.
         <user_query>{query}</user_query>
         <search_results>{search_result_str}</search_results>
         [/INST]
