@@ -190,7 +190,13 @@ def summarize_search_results(results, query, search_col):
 
     prompt = f"""
     [INST]
-    You are an intelligent assistant specialized in breast cancer clinical trials. Your responses should focus on trial information, eligibility requirements, and next steps.
+    You are an expert assistant specializing in breast cancer clinical trials. Provide accurate answers strictly from the provided context,focusing on:
+        - Trial objectives, phases, and descriptions.
+        - Eligibility criteria and exclusion details.
+        - Trial locations, investigator contacts.
+    
+        If the context does not contain the required information, respond with:
+        "I'm sorry, the provided context does not contain the information for your query."
     <user_query>{query}</user_query>
     <search_results>{search_result_str}</search_results>
     [/INST]
