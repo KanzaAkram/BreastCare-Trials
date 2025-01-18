@@ -8,3 +8,4 @@ dependencies:
     - snowflake
     - snowflake-ml-python
     - snowflake-connector-python
+    - reportlab

@@ -1,6 +1,12 @@
 import streamlit as st
 from snowflake.core import Root
 import snowflake.connector
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from io import BytesIO
+
 
 MODELS = [
     "mistral-large2"
@@ -65,16 +71,17 @@ def init_layout():
             padding: 10px;
             font-size: 16px;
         }
-        .stButton button {
-        background: linear-gradient(90deg, #d5006d, #9c27b0); /* Pink to purple gradient background */
-        color: white;
-        font-size: 16px;
-        border-radius: 8px;
-        padding: 12px;
-        border: none; /* Remove border */
-        transition: background-color 0.3s, color 0.3s; 
-        cursor: pointer;
-    }
+        /* Style for all buttons */
+        div.stButton > button, div.stDownloadButton > button {
+            background: linear-gradient(90deg, #d5006d, #9c27b0); /* Pink to purple gradient background */
+            color: white;
+            font-size: 16px;
+            border-radius: 8px;
+            padding: 12px;
+            border: none; /* Remove border */
+            transition: background-color 0.3s, color 0.3s; 
+            cursor: pointer;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -226,7 +233,6 @@ def display_summary(summary):
     """
     st.markdown(f"<div class='main'>{summary}</div>", unsafe_allow_html=True)
 
-
 def apply_sidebar_styles():
     sidebar_styles = """
     <style>
@@ -237,6 +243,37 @@ def apply_sidebar_styles():
     """
     st.markdown(sidebar_styles, unsafe_allow_html=True)
 
+def create_pdf_from_text(detailed_answer, concise_summary,query):
+    """
+    Generates a PDF document from the detailed answer and concise summary.
+    """
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
+
+    # Add title
+    story.append(Paragraph("<b>Breast Cancer Clinical Trial Search Results</b>", styles['h1']))
+    story.append(Spacer(1, 12))
+     #Add the query in bold
+    story.append(Paragraph(f"<b>Query:</b> {query}", styles['Normal']))
+    story.append(Spacer(1, 12))
+
+    # Add Detailed Answer
+    if detailed_answer:
+        story.append(Paragraph("<b>Detailed Answer:</b>", styles['h2']))
+        story.append(Paragraph(detailed_answer, styles['Normal']))
+        story.append(Spacer(1, 12))
+
+
+    # Add Concise Summary if available
+    if concise_summary:
+        story.append(Paragraph("<b>Summary:</b>", styles['h2']))
+        story.append(Paragraph(concise_summary, styles['Normal']))
+    
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
 
 def main():
     apply_sidebar_styles()  # Apply sidebar styling
@@ -252,6 +289,10 @@ def main():
             results = query_cortex_search_service(st.session_state.query)
             search_col = get_search_column(st.session_state.cortex_search_service)
 
+            # Initialize variables for storing detailed and concise summaries
+            detailed_answer = ""
+            concise_summary = ""
+
             # Display detailed results
             if results:
                 with st.spinner("Fetching answer..."):
@@ -266,6 +307,16 @@ def main():
                         display_summary(concise_summary)
             else:
                 st.error("No results found. Please refine your query or try another.")
+
+            # Create and add Download PDF Button if results are available
+            if detailed_answer or concise_summary:
+                 pdf_buffer = create_pdf_from_text(detailed_answer, concise_summary,st.session_state.query)
+                 st.download_button(
+                    label="Download as PDF",
+                    data=pdf_buffer,
+                    file_name="clinical_trial_results.pdf",
+                    mime="application/pdf"
+                )
 
 
 if __name__ == "__main__":
