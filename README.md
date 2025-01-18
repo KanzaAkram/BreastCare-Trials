@@ -16,7 +16,7 @@ These barriers hinder innovation and limit the impact of clinical trial data, ma
 
 ## 🌟 Solution: BreastCare Trials
 
-**BreastCare Trials** is an AI-powered **Retrieval-Augmented Generation (RAG)** application designed to bridge the gap between complex clinical trial data and its end users—clinicians, researchers, and patients. By combining cutting-edge AI technologies, we empower healthcare stakeholders with precise, actionable insights to revolutionize breast cancer care.
+**BreastCare Trials** is an AI-powered **Retrieval-Augmented Generation (RAG)** application designed to bridge the gap between complex clinical trial data of breast cancer and its end users—clinicians, researchers, and patients. By combining cutting-edge AI technologies, we empower healthcare stakeholders with precise, actionable insights to revolutionize breast cancer care.
 
 ### Key Features:
 1. **Streamlined Search**: Leverages **Snowflake Cortex Search** for precise and efficient retrieval of extensive National Cancer Institute (NCI) clinical trial data.
